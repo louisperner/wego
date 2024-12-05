@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 
-import { useScrapeStore } from '../store/ScraperStore';
+import { useScrapeStore } from "../store/ScraperStore";
 
 function Scraper() {
   const store = useScrapeStore();
@@ -8,19 +8,24 @@ function Scraper() {
   return (
     <>
       {store.url && (
-        <div className='w-full h-full absolute bg-[#d7dc54] p-[14px]'>
-          <div className='w-full h-full rounded-[30px]'>
+        <div className="w-full h-full absolute bg-[#d7dc54] p-[14px]">
+          <div className="w-full h-full rounded-[30px]">
             {store.showBubbles && (
-              <div className='w-full h-full'>
-                <div className='w-full h-full'>{store.code}</div>
+              <div className="w-full h-full">
+                <div className="w-full h-full">{store.code}</div>
               </div>
             )}
             <webview
-              enableblinkfeatures='PreciseMemoryInfo, CSSVariables'
+              enableblinkfeatures="PreciseMemoryInfo, CSSVariables"
               ref={store.webviewRef}
-              className='w-full h-full rounded-[30px]'
-              src={`${store.url.includes('https://') ? '' : 'https://'}${store.url}`}
-              onLoad={console.log('Loaded')}
+              className="w-full h-full rounded-[30px]"
+              src={`${store.url.includes("https://") ? "" : "https://"}${
+                store.url
+              }`}
+              onLoad={() => {
+                store.setLoading(true);
+                console.log("Loaded");
+              }}
             ></webview>
           </div>
         </div>

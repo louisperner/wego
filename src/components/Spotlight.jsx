@@ -1,12 +1,15 @@
-import React from "react";
-
+import React, { useState } from "react";
 import { useScrapeStore } from "../store/ScraperStore";
 import Scraper from "./Scraper";
+import Loading from "./Loading";
+import EventForm from "./PlacesForm";
 
 const Spotlight = () => {
   const store = useScrapeStore();
+  const { create, setCreate } = store;
 
   const handleDomReady = () => {
+    store.setLoading(true);
     const webview = store.webviewRef.current;
     console.log("DOM is ready");
     // webview.openDevTools();
@@ -52,81 +55,107 @@ const Spotlight = () => {
 
           // Start the search from the global window object
           const placeId = searchInObjects(window.document, 'placeid');
-          console.log(placeId);
-          return {
-            id: placeId,
-            name: searchForTitle(),
-          };
+          const revealCard = document.querySelector("button[jsaction='reveal.card.latLng']")
+          
+          if(revealCard){
+            const latLong = revealCard.textContent;
+
+            return {
+              id: false,
+              name: false,
+              latLong: latLong
+            }
+           } else {
+             return {
+               id: placeId,
+               name: searchForTitle(),
+               latLong: false
+             };
+           }
+
+         
         })();
         `
       )
       .then(async (html) => {
-        // webview.openDevTools();
-        console.log("Source Code:", html);
-
-        store.setPlace(html);
-        store.setPlace({ id: html.id, name: html.name });
+        console.log(html);
+        if (html.id) {
+          // store.setPlace(html);
+          store.setPlace({ id: html.id, name: html.name });
+          store.setLoading(false);
+        } else if (html.latLong) {
+          // store.setPlace(html);
+          store.setPlace({ latLong: html.latLong });
+          store.setLoading(false);
+        }
       })
       .catch((err) => console.error("Error getting source code:", err));
   };
 
   return (
     <>
-      <div className="flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#d7dc54] p-[14px] w-[682px] h-[255px] rounded-[35px] drop-shadow-2xl z-50">
-        <div className="bg-[#050318] w-[653px] h-[225px] rounded-[25px] drop-shadow-2xl">
-          <div className="flex p-6 w-full">
-            <div className="w-[90px] h-20 mr-50 mt-3">
-              <img src="./assets/logob2.png" />
-            </div>
-            <div className="flex w-full h-20 gap-4 text-white text-[35px] p-4">
-              {store.url != "" ? (
-                <div>
-                  {!store.place.id ? (
+      {!create ? (
+        <div className="flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#d7dc54] p-[14px] w-[682px] h-[155px] rounded-[35px] drop-shadow-2xl z-50">
+          <div className="bg-[#050318] w-[653px] h-[125px] rounded-[25px] drop-shadow-2xl">
+            <div className="flex p-6 w-full">
+              <div className="flex w-full h-20 gap-4 text-white p-4 justify-evenly">
+                <img src="./assets/logob2.png" />
+                <div className="">
+                  <div className="flex w-full justify-between">
+                    <div className="w-full min-w-[350px]">
+                      {!store.place.id && !store.place.latLong ? (
+                        <div>
+                          <div className="text-[16px]">Buscador de ID's</div>
+                          <div className="text-[16px]">v0.0.1</div>
+                        </div>
+                      ) : (
+                        <div>
+                          {store.place.id && (
+                            <div className="text-[16px]">{store.place.id}</div>
+                          )}
+                          {store.place.latLong && (
+                            <div>
+                              <div className="text-[20px]">
+                                {store.place.latLong}
+                              </div>
+                              <div className="text-[16px]">Custom place</div>
+                            </div>
+                          )}
+
+                          <div className="text-[16px]">
+                            {store.place.name &&
+                              store.place.name.replace(" - Google Maps", "")}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <div
-                      className="ml-40  cursor-pointer"
+                      className="w-[100px] cursor-pointer"
                       onClick={() => handleDomReady()}
                     >
-                      {"Pegar ID"}
+                      {!store.loading ? (
+                        !store.place.latLong ? (
+                          <img src="./assets/go.png" />
+                        ) : (
+                          <div onClick={() => setCreate(true)}>
+                            <img src="./assets/go.png" />
+                            <div className="text-[16px]">criar</div>
+                          </div>
+                        )
+                      ) : (
+                        <Loading />
+                      )}
                     </div>
-                  ) : (
-                    <div>
-                      <div className="text-[16px]">{store.place.id}</div>
-                      <div className="text-[16px]">
-                        {store.place.name.replace(" - Google Maps", "")}
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
-              ) : (
-                <div>
-                  <div className="text-[26px]">Buscador de ID's</div>
-                  <div className="text-[16px]">v 0.0.1</div>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="absolute w-[95%] bg-[#474747] h-[75px] rounded-[15px] bottom-4 left-4 z-8 text-[24px] text-white p-4 flex justify-between">
-            <input
-              className="w-[75%] h-full pl-5 outline-none"
-              value={store.question}
-              placeholder="// Cole o link do estabelecimento"
-              onChange={(e) => {
-                store.setQuestion(e.currentTarget.value);
-              }}
-            />
-            <div
-              className="bottom-6 right-8 cursor-pointer pr-1"
-              onClick={async () => {
-                store.setUrl(store.question);
-              }}
-            >
-              <div className="w-[100px]">
-                <img src="./assets/go.png" />
               </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <EventForm />
+      )}
+
       <Scraper />
     </>
   );

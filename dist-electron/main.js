@@ -2,12 +2,14 @@
 const electron = require("electron");
 electron.app.whenReady().then(() => {
   const win = new electron.BrowserWindow({
+    width: 1024,
+    height: 900,
     show: true,
-    transparent: true,
-    frame: false,
+    transparent: false,
+    frame: true,
     center: true,
     hasShadow: false,
-    movable: false,
+    movable: true,
     alwaysOnTop: false,
     focusable: true,
     webPreferences: {
@@ -15,7 +17,6 @@ electron.app.whenReady().then(() => {
       webviewTag: true
     }
   });
-  win.maximize();
   win.show();
   win.setFocusable(true);
   if (process.env.VITE_DEV_SERVER_URL) {
@@ -23,22 +24,4 @@ electron.app.whenReady().then(() => {
   } else {
     win.loadFile("dist/index.html");
   }
-  setInterval(() => {
-    const point = electron.screen.getCursorScreenPoint();
-    const [x, y] = win.getPosition();
-    const [w, h] = win.getSize();
-    if (point.x > x && point.x < x + w && point.y > y && point.y < y + h) {
-      updateIgnoreMouseEvents(point.x - x, point.y - y);
-    }
-  }, 300);
-  const updateIgnoreMouseEvents = async (x, y) => {
-    const image = await win.webContents.capturePage({
-      x,
-      y,
-      width: 1,
-      height: 1
-    });
-    var buffer = image.getBitmap();
-    win.setIgnoreMouseEvents(!buffer[3]);
-  };
 });
